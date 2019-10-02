@@ -12,28 +12,32 @@ public class GridworldGenerator {
 	private static Stack<Coord> stack;
 	private static Random rng = new Random();
 	
-	public static Gridworld generate() {
-		gridworld = new Gridworld();
+	static int GRIDWORLD_X_DIMENTION;
+	static int GRIDWORLD_Y_DIMENTION;
+	
+	public static Gridworld generate(int x, int y) {
+		GRIDWORLD_X_DIMENTION = x;
+		GRIDWORLD_Y_DIMENTION = y;
+		gridworld = new Gridworld(GRIDWORLD_X_DIMENTION,GRIDWORLD_Y_DIMENTION);
 		stack = new Stack<>();
 	
 		hydrateNotVisitedCells();
 		
-		Coord curr = new Coord(rng.nextInt(101), rng.nextInt(101));
+		Coord curr = new Coord(rng.nextInt(GRIDWORLD_X_DIMENTION), rng.nextInt(GRIDWORLD_Y_DIMENTION));
 		notVisitedCells.remove(curr);
 
 		while(true) {
 			curr = traverse(curr);
 			
 			if(curr == null) {
-				int i = rng.nextInt(notVisitedCells.size());
-				if(i == 0) {
+			
+				if(notVisitedCells.size() == 0) {
 					break;
 				}
+				int i = rng.nextInt(notVisitedCells.size());
 				curr = (Coord) notVisitedCells.toArray()[i];
 			}
-	
 		}
-		
 		return gridworld;
 	}
 	
@@ -44,9 +48,8 @@ public class GridworldGenerator {
 			notVisitedCells.remove(curr);
 			return stack.size() != 0 ? stack.pop() : null;
 		}
-		
-		//determine if a  random neighbor is a blocker or not based on 70/30 probability.
-		boolean isCellABlocker = rng.nextInt(101) < 25 ? true : false;
+		//determine if a random neighbor is a blocker or not based on set probability.
+		boolean isCellABlocker = rng.nextInt(101) < 20 ? true : false;
 		
 		if(isCellABlocker) {
 			gridworld.setBlocker(nextMove);
@@ -60,8 +63,8 @@ public class GridworldGenerator {
 	
 	private static void hydrateNotVisitedCells() {
 		notVisitedCells = new HashSet<>();
-		for (int i = 0 ; i < 101; i++) {
-			for (int j = 0; j < 101; j++) {
+		for (int i = 0 ; i < GRIDWORLD_X_DIMENTION; i++) {
+			for (int j = 0; j < GRIDWORLD_Y_DIMENTION; j++) {
 				notVisitedCells.add(new Coord(i,j));
 			}
 		}
@@ -80,7 +83,7 @@ public class GridworldGenerator {
 		//legalMoves are neighbors that are in bound and are not visited yet.
 		ArrayList<Coord> legalMoves = new ArrayList<>();
 		for (Coord c : neighbors) {
-			if(c.getX() > 0 || c.getY() > 0 || c.getX() < 101 || c.getY() < 101 ) {
+			if(c.getX() > 0 || c.getY() > 0 || c.getX() < GRIDWORLD_X_DIMENTION || c.getY() < GRIDWORLD_Y_DIMENTION ) {
 				if(notVisitedCells.contains(c)) {
 					legalMoves.add(c);
 				}

@@ -1,6 +1,7 @@
 package classes;
 
 public class Coord {
+
 	private int x;
 	private int y;
 	
@@ -33,11 +34,21 @@ public class Coord {
 		return false;
 	}
 	
+	public boolean equals(Coord c) {
+		if(this.getX() == c.getX() && this.getY() == c.getY()){
+			return true;
+		}
+		return false;
+	}
+	
 	//hashcode found here: https://stackoverflow.com/questions/22826326/good-hashcode-function-for-2d-coordinates
 	public int hashCode() {
-	      int tmp = (y +  ((x+1)/2));
+	      int tmp = (y + ((x+1)/2));
 	      return x +(tmp*tmp);
 	}
 	
+	public String toString(){
+		return "[x: " + x + " y: "+ y + "]";
+	}
 
 }
