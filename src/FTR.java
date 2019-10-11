@@ -201,6 +201,7 @@ public class FTR {
 			 */
 			
 			start.pointer = 0;
+			start.gValue = 0;
 			
 		}
 		
@@ -216,6 +217,7 @@ public class FTR {
 		
 		State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
 		Stack<State> path;
+		newHValueMap = new int[X_DIMENSION][Y_DIMENSION];
 		
 		/*
 		 * Make the map
@@ -314,6 +316,12 @@ public class FTR {
 				//System.out.println("Check goal pointer: " + goal.pointer);
 				
 				path = createPath(goal);
+				Iterator<State> it = CLOSED.iterator();
+				while (it.hasNext()) {
+					State n = it.next();
+					map[n.x][n.y].iteration = counter;
+					newHValueMap[n.x][n.y] = goal.gValue - n.gValue;
+				}
 			}
 			else {
 				
@@ -347,6 +355,7 @@ public class FTR {
 			 */
 			
 			start.pointer = 0;
+			start.gValue = 0;
 			
 		}
 		
@@ -497,6 +506,7 @@ public class FTR {
 		
 		while (OPEN.peek() != null) {
 			
+			//System.out.println("while");
 			//Scanner myObj = new Scanner(System.in);
 			//String userName = myObj.nextLine();
 			
@@ -515,6 +525,9 @@ public class FTR {
 			
 			s.iteration = counter;
 			adaptiveAStarExpandedCells++;
+			System.out.println("Expanded cell: " + s.x + "," +s.y);
+			Scanner myObj = new Scanner(System.in);
+			String userName = myObj.nextLine();
 			CLOSED.add(s);
 		
 			//System.out.println("expanded cell position: " + s.x + " " + s.y);
@@ -526,7 +539,7 @@ public class FTR {
 			 */
 			
 			for (State n: actions(s)) {
-				System.out.println("for");
+				//System.out.println("for");
 				//myObj = new Scanner(System.in);
 				//userName = myObj.nextLine();
 				
@@ -553,34 +566,65 @@ public class FTR {
 				 */
 				
 				boolean found = false;
-				State c = n;
+				boolean skip = false;
+				State c;
 				
 				Iterator<State> value = OPEN.iterator();
 				while (value.hasNext()) {
+					System.out.println(value.next());
+					myObj = new Scanner(System.in);
+					userName = myObj.nextLine();
+		        } 
+				value = OPEN.iterator();
+				while (value.hasNext()) {
 					c = value.next();
 		            if (c.equals(n)) {
+		            	System.out.println("State n was found in open list");
+		            	System.out.println("n: " + n.x + "," + n.y);
 		            	found = true;
+		            	if (found == true ) {
+		            		System.out.println("Check counter: " + counter + " n.iteration: " + n.iteration);
+							if (n.iteration == counter - 1) {
+								if (n.fValue >= newHValueMap[n.x][n.y] + s.gValue + ACTION_COST) {
+									System.out.println("Removing c " + c.x + "," + c.y);
+									OPEN.remove(c);
+								}
+								else {
+									skip = true;
+								}
+							}
+							else if (n.fValue >= s.gValue + ACTION_COST + n.hValue) {
+								System.out.println("Removing c " + c.x + "," + c.y);
+								OPEN.remove(c);
+							}
+							else
+								skip = true;
+						}
 		            	break;
 		            }
 		        } 
-		
-				if (found == true) {
-					OPEN.remove(c);
+				
+				if (skip == true) {
+					System.out.println("Skip n " + n.x + "," + n.y);
+					continue;
 				}
 				
 				
-				if (c.equals(goal)) {
-					c.hValue = 0;
-					c.gValue = s.gValue + ACTION_COST;
+				if (n.equals(goal)) {
+					n.hValue = 0;
+					n.gValue = s.gValue + ACTION_COST;
+					n.fValue = n.gValue;
 				}
-				else if (c.iteration == counter - 1) {
-					c.hValue = goal.gValue - c.gValue;
-					c.gValue = s.gValue + ACTION_COST;
+				else if (n.iteration == counter - 1) {
+					n.gValue = s.gValue + ACTION_COST;
+					n.fValue = n.gValue + newHValueMap[n.x][n.y];
+					System.out.println("new heuristic: "+ n.gValue + " + " + newHValueMap[n.x][n.y]);
 				}
 				
 				else {
-					c.hValue = manhattenValue(c.x, c.y, goal.x, goal.y);
-					c.gValue = s.gValue + ACTION_COST;
+					n.gValue = s.gValue + ACTION_COST;
+					System.out.println("manhatten: "+ n.gValue + " + " + n.hValue);
+					n.fValue = n.gValue + n.hValue;
 				}
 					
 				
@@ -594,24 +638,24 @@ public class FTR {
 				 *  it moved from
 				 */		
 				
-				if (c.x == s.x+1) {
-					c.pointer = 1;
+				if (n.x == s.x+1) {
+					n.pointer = 1;
 				}
-				else if (c.x == s.x-1) {
-					c.pointer = 2;
+				else if (n.x == s.x-1) {
+					n.pointer = 2;
 				}
-				else if (c.y == s.y+1) {
-					c.pointer = 3;
+				else if (n.y == s.y+1) {
+					n.pointer = 3;
 				}
 				else {
-					c.pointer = 4;
+					n.pointer = 4;
 				}
 				
 				/*
 				 * Calculate and set c's f value and add state c to the open list
 				 */
-				c.fValue = c.gValue + c.hValue;		
-				OPEN.add(c);
+				System.out.println("Adding n " + n.x + "," + n.y);
+				OPEN.add(n);
 				
 			}
 				
