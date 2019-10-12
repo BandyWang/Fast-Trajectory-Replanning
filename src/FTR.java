@@ -789,7 +789,7 @@ public class FTR {
 		return temp;
 	}
 	
-	private static void printMap(int [][]map) {
+	public static void printMap(int [][]map) {
 		System.out.print(" ");
 		for (int i = 0; i < X_DIMENSION; i++) {
 			System.out.print(i);
@@ -857,6 +857,15 @@ public class FTR {
 		}
 	}
 	
-
+	public static int[][] generateMap() {
+		int[][] mapp= new int[101][101];
+		for (int i = 0; i < 101; i++) {
+			for (int j = 0; j < 101; j++) {
+				mapp[i][j] = rng.nextInt(100) < 15 ? 1:0;
+				
+			}
+		}
+		return mapp;
+	}
 	
 }

@@ -1,5 +1,6 @@
 
-public class State {
+
+public class State  {
 	
 	int gValue;
 	int hValue;
