@@ -1,0 +1,150 @@
+\documentclass[12pt]{amsart}
+
+\usepackage{amsbsy,amssymb,amscd,amsfonts,latexsym,amstext,delarray, amsmath,color,caption}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{matrix,arrows}
+\usepackage{graphicx}
+\usepackage[margin=0.7in]{geometry}
+\usepackage{nicefrac,palatino}
+\usepackage{eulervm}
+\renewcommand{\mathbf}{\mathbold}
+\usepackage{graphicx,relsize}
+%\usepackage{bclogo}
+
+\usepackage{cite}
+
+
+
+\newcommand{\scr}{\mathscr}
+
+
+%\newcommand{\blue}{\color{blue}}
+%\newcommand{\black}{\color{black}}
+
+
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Labeling and refering
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+
+
+%\def\ga{\gamma}
+%\def\Ga{\Gamma}
+\def\R{\mathbb{R}}
+\def\C{\mathbb{C}}
+\def\H{\mathbb{H}}
+\def\E{\mathbb{E}}
+\def\O{\mathbb{O}}
+\def\Z{\mathbb{Z}}
+\def\N{\mathbb{N}}
+\def\P{\mathbb{P}}
+
+
+
+
+
+\addtolength{\textwidth}{1.7cm}
+\addtolength{\textheight}{1.9cm}
+\addtolength{\hoffset}{-0.8cm}
+\addtolength{\voffset}{-0.85cm}
+\textheight 9.1in
+\textwidth 6.6in
+
+
+
+\begin{document}
+ \vskip-10pt
+
+ \vskip-10pt
+\noindent
+\voffset=0.5cm
+\hoffset=0.5cm
+\parindent 0.0in
+
+
+\parindent 0.0in
+\setlength{\parskip}{0.25cm}
+
+\pagestyle{plain}
+
+\vspace*{.5cm}
+
+
+{\centerline{\bf  Assignment 1 : Fast Trajectory Replanning}}
+{\centerline{\bf Eric He, Bandy Wang}}
+{\centerline{\bf Due: October 14, 11:55pm}}
+
+
+
+\noindent 
+
+
+\medskip\noindent Part 1
+
+Let the agent start at cell E2 as shown in figure 8. In the first iteration of A*.  After running ComputePath() for the first time, the OPEN list contains the following: 
+
+\begin{center}
+ \begin{tabular}{||c c  c||} 
+ \hline
+ Cell & h , g value & f value  \\ [0.5ex] 
+ \hline\hline
+ E3 & 2,1 & 5 \\ 
+ \hline
+ D2 & 4,1 & 5 \\
+ \hline
+ E1 & 4,1 & 5 \\
+ \hline
+\end{tabular}
+\end{center}
+
+Since E3 has the lowest f value, it gets popped out and we expand to E3. At this point, the algothrium is not aware of any blocked cells between the agent and the goal. So E3's neighbors E4 and D3, will be treated as open cells and placed into the OPEN list. After ComputePath() is completed, the computed best path will be E2 (A)-> E3 -> E4 -> E5 (T). This explains why A* expands east rather than north.  
+
+\medskip\noindent Part 2
+
+Since A* has a CLOSED list, the algorithim will never expand to a cell that it had already expanded before. Assuming that the gridworld is finite and the target is reachable, the target is always reached because worst case scenario all of the cells will be traversed once and the target is once of them.
+
+If the target is unreachable, the agent will explore all cells that it has access to. The agent wll realize that the are no more cells to be explored once the OPEN list is empty, and know that the target is unreachable if the target is never reached at that point.
+
+To prove that the number of moves of the agent until it reaches the target or discovers that this is impossible is
+bounded from above by the number of unblocked cells squared, let n represent the number of unblocked cells in a given gridworld. In a single iteration of A*, the number of moves m made by ComputePath() is at most n (an example of m = n is if the gridworld is a 1 x $m$ with no blocked cells). Thus: m <= n.  
+
+Once a best path is computed, the worst case is that the block will move always move only one step on the path, then realize that there is a blocked cell and must compute a path using a neighbor cell that it has not gone to before. There is a case where the agent only moves one step down the path in each iterations, and has gone down all possible unblocked cells before reaching the target. Letting $a$ be the number of A* iterations, we can state that $a <= n$.
+
+Taking both inequalities, we can combine to get $am <= n^2$. $am$ represents the total moves that the agent makes in all iterations of A* (hense, Repeated Forward A*), and it is bounded above by the number of unblocked cells squared and thus completing the proof. 
+
+\medskip\noindent Part4
+
+The project argues that “the Manhattan distances are consistent in
+gridworlds in which the agent can move only in the four main compass directions.” Prove that this is indeed the case.
+
+Assume that Manhattan distaces are not consistent in gridworlds for the sake of contridiction. It is also implied that the cost to perfrom any action in this world is uniformed. In this gridworld, there exists a cell $c$ such that
+h(c) > c(c,a,m) + h(m) 
+where c(c,a,m) is the action cost to go from cell $c$ to $m$ using action $a$ and $h(c)$ and $h(m)$ are the heurstic from the start cell to $c$ and $m$ respectively.	
+
+By moving $h(m)$ to the left side, we have the following:
+$h(c) - h(m) > c(c,a,m)$
+
+The left side of the inequality represents the Manhatten distance between $c$ and $m$. The inequallity implies that the Manhatten distance betwewen $c$ and $m$ is greater then the cost to get from $c$ and $m$. However, this is not possible in best case sceniro, both the cost value and Manhatten distance are both equal. The only way such inequality exist if if the agent can travel diagonally, which is not possible in this gridworld. Thus, a contridiction as occured and it is proven that the Mahattan distanc is consistant.
+
+  
+
+
+
+
+
+
+
+
+\end{document}
