@@ -40,6 +40,7 @@ public class FTR {
 	 * Count the expanded cells for each version of A*
 	 */
 	static int forwardAStarExpandedCells = 0;
+	static int backwardAStarExpandedCells = 0;
 	static int adaptiveAStarExpandedCells = 0;
 	
 	/*
@@ -51,7 +52,8 @@ public class FTR {
 		//repeatedAdaptiveAStar();
 		repeatedBackwardsAStar();
 		//printMap(observableMap);
-		//System.out.println("Expanded cells: "+adaptiveAStarExpandedCells);
+		printMap(knownMap);
+		System.out.println("Expanded cells: "+backwardAStarExpandedCells);
 	}
 	
 	/*
@@ -255,8 +257,8 @@ public class FTR {
 				 * Don't need a stack to store the path
 				 * Follow pointers from start state
 				 */
-				System.out.println("what is goal's pointer? " + goal.pointer);
-				start = followPointers(goal);
+				System.out.println("what is start's pointer? " + start.pointer);
+				start = followPointers(start);
 				
 				
 			}
@@ -270,7 +272,7 @@ public class FTR {
 			knownMap[start.x][start.y] = -1;
 			
 			start.pointer = 0;
-			goal.pointer = 0;
+			//goal.pointer = 0;
 			
 		}
 		
@@ -295,6 +297,7 @@ public class FTR {
 		knownMap[2][2] = 1;
 		
 		State start = map[2][4];
+		start.hValue = manhattenValue(goal.x, goal.y, start.x, start.y);
 		map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
 		counter = 0;
 		
@@ -484,6 +487,8 @@ public class FTR {
 			if (s.equals(goal)) {
 				return true;
 			}
+			
+			backwardAStarExpandedCells++;
 			
 			System.out.println("Computing path, expanded cell " + s.x + "," +s.y);
 			CLOSED.add(s);
@@ -746,15 +751,15 @@ public class FTR {
 	}
 	
 	private static State followPointers(State start) {
+		System.out.println("Robot following backwards A star: ");
 		State temp = start; int x,y;
 		while (temp.pointer != 0) {
-			System.out.print("Robot following backwards A star: ");
-			System.out.print("	Robot on cell " + temp.x + "," + temp.y + " ");
+			System.out.println("	Robot on cell " + temp.x + "," + temp.y + " ");
 			if (temp.pointer == 1) {
-				x = temp.x+1; y = temp.y;
+				x = temp.x-1; y = temp.y;
 			}
 			else if (temp.pointer == 2) {
-				x = temp.x-1; y = temp.y;
+				x = temp.x+1; y = temp.y;
 			}
 			else if (temp.pointer == 3) {
 				x = temp.x; y = temp.y-1;
@@ -769,6 +774,9 @@ public class FTR {
 				myObj.close();
 				return null;
 			}
+			
+			initialCheck(map[temp.x][temp.y]);
+			knownMap[temp.x][temp.y] = -1;
 			
 			if (knownMap[x][y] == 1) {
 				System.out.println("	Robot tried to walk blocked cell " + x + "," + y + "!");
