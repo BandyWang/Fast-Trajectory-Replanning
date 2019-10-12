@@ -48,9 +48,10 @@ public class FTR {
 	
 	public static void main(String[] args) {
 		//repeatedForwardAStar();
-		repeatedAdaptiveAStar();
-		printMap(observableMap);
-		System.out.println("Expanded cells: "+adaptiveAStarExpandedCells);
+		//repeatedAdaptiveAStar();
+		repeatedBackwardsAStar();
+		//printMap(observableMap);
+		//System.out.println("Expanded cells: "+adaptiveAStarExpandedCells);
 	}
 	
 	/*
@@ -111,7 +112,6 @@ public class FTR {
 			return;
 		}
 		
-		System.out.println("1");
 		
 		while (!start.equals(goal)) {
 			
@@ -201,7 +201,6 @@ public class FTR {
 			 */
 			
 			start.pointer = 0;
-			start.gValue = 0;
 			
 		}
 		
@@ -209,19 +208,79 @@ public class FTR {
 		
 	}
 	
+	public static void repeatedBackwardsAStar() {
+		
+		State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
+		
+		Scanner myObj;
+		
+		makeMap(goal);
+		
+		knownMap[2][3] = 1;
+		knownMap[3][4] = 1;
+		knownMap[2][2] = 1;
+		
+		State start = map[2][4];
+		map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
+		
+
+		initialCheck(start);
+		
+		if (knownMap[start.x][start.y] == 1) {
+			System.out.println("Starting cell is block");
+			return;
+		}
+		
+		
+		while (!start.equals(goal)) {
+			
+			myObj = new Scanner(System.in);
+			myObj.nextLine();
+			printMap(knownMap);
+			
+			start.gValue = Integer.MAX_VALUE;
+			goal.gValue = 0;
+			
+			OPEN = new PriorityQueue<State>(( a, b ) -> 
+			(100 * a.fValue - a.gValue) - (100* b.fValue - b.gValue));
+			CLOSED = new HashSet<>();
+			OPEN.add(goal);
+			
+			/*
+			 * Backwards A star - path finding starts at goal and ends at start state
+			 */
+			if (computePathBackwards(goal, start)) {
+				
+				/*
+				 * Don't need a stack to store the path
+				 * Follow pointers from start state
+				 */
+				System.out.println("what is goal's pointer? " + goal.pointer);
+				start = followPointers(goal);
+				
+				
+			}
+			else {
+				System.out.println("No path found");
+				myObj.close();
+				return;
+			}
+			
+			
+			knownMap[start.x][start.y] = -1;
+			
+			start.pointer = 0;
+			goal.pointer = 0;
+			
+		}
+		
+	}
+	
 	public static void repeatedAdaptiveAStar() {
-		/*
-		 * Manually configure the goal state for now
-		 * Declare a stack to hold states belonging to shortest path
-		 */
 		
 		State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
 		Stack<State> path;
 		newHValueMap = new int[X_DIMENSION][Y_DIMENSION];
-		
-		/*
-		 * Make the map
-		 */
 		
 		makeMap(goal);
 		
@@ -235,22 +294,9 @@ public class FTR {
 		knownMap[3][4] = 1;
 		knownMap[2][2] = 1;
 		
-		/*
-		 * Manually configure the start state for now
-		 * Have our map remember the instance of goal declared above
-		 * Set the current iteration of A* to 0
-		 */
-		
 		State start = map[2][4];
 		map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
 		counter = 0;
-		
-		/*
-		 * Check start cell neighbors
-		 * Check if starting cell is a blocked cell
-		 * Begin the repeated A Star
-		 * Break the loop if the agent finds the goal
-		 */
 		
 		initialCheck(start);
 		
@@ -261,37 +307,13 @@ public class FTR {
 		
 		while (!start.equals(goal)) {
 			
-			/*
-			 * Use scanner to block once travelPath is called
-			 * Press enter to unblock and move to next iteration of A*
-			 * This will make analyzing each iteration of A* easier
-			 */
-			
 			Scanner myObj = new Scanner(System.in);
 			String userName = myObj.nextLine();
 			printMap(knownMap);
 			
-			//COUNTER AND SEARCH IS NEVER USED IN THIS CODE
-			//**********************************************************
-			/*
-			 * Counter will store the xth iteration of A*
-			 * At the beginning of A* set the start state's g value to 0
-			 * Set the goal state's g value to maximum since we do not know
-			 * Set both state's search value to counter to mark it in the current iteration
-			 */
-			
 			counter+=1;
 			start.gValue = 0;
 			goal.gValue = Integer.MAX_VALUE;
-			
-			//COUNTER AND SEARCH IS NEVER USED IN THIS CODE
-			//**********************************************************
-			
-			/*
-			 * Open list and closed list "forget" previous iteration of expanded cells
-			 * Insert starting cell inside open list
-			 */
-			
 			
 			
 			OPEN = new PriorityQueue<State>(( a, b ) -> 
@@ -299,21 +321,7 @@ public class FTR {
 			CLOSED = new HashSet<>();
 			OPEN.add(start);
 			
-			/*
-			 * Compute path will return true if a path was found, false if no path is found
-			 */
-			
 			if (computePathAdaptive(start, goal)) {
-				
-				/*
-				 * Create path will return a stack
-				 * Given that a path is found store the path in a stack
-				 */
-				
-				//printMap();
-				//Scanner myObj = new Scanner(System.in);
-				//String userName = myObj.nextLine();
-				//System.out.println("Check goal pointer: " + goal.pointer);
 				
 				path = createPath(goal);
 				Iterator<State> it = CLOSED.iterator();
@@ -324,35 +332,13 @@ public class FTR {
 				}
 			}
 			else {
-				
-				/*
-				 * Given that a path is not found, break the loop 
-				 */
-				
 				System.out.println("No path found");
 				return;
 			}
 			
-			/*
-			 * If we reach this section the loop has not been broken and thus a path was found and stored 
-			 * Have the agent travel the path
-			 * Travel path will return which state the agent will end up
-			 * If the agent reached the goal, travel path returns the goal state
-			 * If the agent found a blocked cell in its path, return the state just before encountering 
-			 */
-			
 			start = travelPath(start, path);
 			
-			/*
-			 * Mark the spot to remember the robot walked this cell
-			 */
-			
 			knownMap[start.x][start.y] = -1;
-			
-			/*
-			 * Set the state's pointer to 0 to avoid infinite loop
-			 * EG: State A points up to B, State B points down to A
-			 */
 			
 			start.pointer = 0;
 			start.gValue = 0;
@@ -363,8 +349,6 @@ public class FTR {
 	}
 	
 	public static boolean computePath(State start, State goal) {
-		
-		//System.out.println("computepath");
 		
 		/*
 		 * Given a start state and a goal state, call A* and return true if a path is found
@@ -389,18 +373,18 @@ public class FTR {
 			State s = OPEN.poll();
 			
 			if (s.equals(goal)) {
-				//myObj.close();
 				return true;
 			}
 			
+			forwardAStarExpandedCells++;
+			System.out.println("Computing path, expanded cell " + s.x + "," +s.y);
+			CLOSED.add(s);
+			
+			System.out.println("Look inside open list: ");
 			Iterator<State> val = OPEN.iterator();
 			while (val.hasNext()) {
-				System.out.println(val.next());
+				System.out.println("	" + val.next());
 	        } 
-			
-			forwardAStarExpandedCells++;
-			System.out.println("Expanded cell: " + s.x + "," +s.y);
-			CLOSED.add(s);
 		
 			//System.out.println("expanded cell position: " + s.x + " " + s.y);
 			
@@ -491,79 +475,86 @@ public class FTR {
 		return false;
 	}
 	
-	public static boolean computePathAdaptive(State start, State goal) {
-		
-		System.out.println("computepath");
-		
-		/*
-		 * Given a start state and a goal state, call A* and return true if a path is found
-		 * Continue the loop given that the open list is not empty 
-		 * 						AND
-		 * ***************************************************************************
-		 * Line below taken out.
-		 * the g value of the goal is larger than the lowest f value in the open list / 
-		 */
+	public static boolean computePathBackwards(State start, State goal) {
 		
 		while (OPEN.peek() != null) {
-			
-			//System.out.println("while");
-			//Scanner myObj = new Scanner(System.in);
-			//String userName = myObj.nextLine();
-			
-			/*
-			 * Retrieve and remove the head of the priority queue
-			 * If the removed head is the goal state return true
-			 * Add the retrieved state to the closed list
-			 */
 			
 			State s = OPEN.poll();
 			
 			if (s.equals(goal)) {
-				//myObj.close();
+				return true;
+			}
+			
+			System.out.println("Computing path, expanded cell " + s.x + "," +s.y);
+			CLOSED.add(s);
+			
+			System.out.println("Look inside open list: ");
+			Iterator<State> val = OPEN.iterator();
+			while (val.hasNext()) {
+				System.out.println("	" + val.next());
+	        } 
+			
+			for (State n: actions(s)) {
+				
+				boolean found = false;
+				State c = n;
+				
+				Iterator<State> value = OPEN.iterator();
+				while (value.hasNext()) {
+					c = value.next();
+		            if (c.equals(n)) {
+		            	found = true;
+		            	break;
+		            }
+		        }
+				
+				if ( (found == false) || (found == true && c.fValue > c.hValue + s.gValue + ACTION_COST)) {
+					if (found == true) {
+						OPEN.remove(c);
+					}
+					
+					n.gValue = s.gValue + ACTION_COST;
+					
+					if (n.x == s.x+1) {
+						n.pointer = 1;
+					}
+					else if (n.x == s.x-1) {
+						n.pointer = 2;
+					}
+					else if (n.y == s.y+1) {
+						n.pointer = 3;
+					}
+					else {
+						n.pointer = 4;
+					}
+					
+					n.hValue = manhattenValue(goal.x, goal.y, n.x, n.y);
+					n.fValue = n.gValue + n.hValue;	
+					OPEN.add(n);
+				}
+				
+			}
+			
+		}
+		return false;
+	}
+	
+	public static boolean computePathAdaptive(State start, State goal) {
+		
+		while (OPEN.peek() != null) {
+			
+			
+			State s = OPEN.poll();
+			
+			if (s.equals(goal)) {
 				return true;
 			}
 			
 			s.iteration = counter;
 			adaptiveAStarExpandedCells++;
-			System.out.println("Expanded cell: " + s.x + "," +s.y);
-			Scanner myObj = new Scanner(System.in);
-			String userName = myObj.nextLine();
 			CLOSED.add(s);
-		
-			//System.out.println("expanded cell position: " + s.x + " " + s.y);
-			
-			/*
-			 * Loop through the possible actions the agent can take from state s
-			 * Assume actions(s) takes care to ignore observed blocked states, states in the closed list
-			 * and out of bounds states
-			 */
 			
 			for (State n: actions(s)) {
-				//System.out.println("for");
-				//myObj = new Scanner(System.in);
-				//userName = myObj.nextLine();
-				
-				//THIS PART HAS BEEN TAKEN OUT.
-				//***************************************************************
-				/*
-				 * If the search value of the neighbor state is not equal to counter 
-				 * THEN
-				 * the state has not been explored before in the current iteration of A*
-				 * THUS
-				 * set it's g value to infinity and mark it as belonging to the present iteration of A*
-				 */
-				
-				/*
-				if (n.searchValue < counter) {
-					n.gValue = Integer.MAX_VALUE;
-					n.searchValue = counter;
-				}
-				*/
-				//***************************************************************
-
-				/*
-				 * Remove n from the open list if already found
-				 */
 				
 				boolean found = false;
 				boolean skip = false;
@@ -572,8 +563,6 @@ public class FTR {
 				Iterator<State> value = OPEN.iterator();
 				while (value.hasNext()) {
 					System.out.println(value.next());
-					myObj = new Scanner(System.in);
-					userName = myObj.nextLine();
 		        } 
 				value = OPEN.iterator();
 				while (value.hasNext()) {
@@ -628,16 +617,6 @@ public class FTR {
 				}
 					
 				
-				
-				//System.out.println("set pointer of " + n.x + " " + n.y);
-				
-				/*
-				 * Set the g value of the neighbor cell 
-				 * Set c's pointer according to which direction, 
-				 *  			UP, DOWN, LEFT, RIGHT
-				 *  it moved from
-				 */		
-				
 				if (n.x == s.x+1) {
 					n.pointer = 1;
 				}
@@ -651,9 +630,6 @@ public class FTR {
 					n.pointer = 4;
 				}
 				
-				/*
-				 * Calculate and set c's f value and add state c to the open list
-				 */
 				System.out.println("Adding n " + n.x + "," + n.y);
 				OPEN.add(n);
 				
@@ -670,19 +646,35 @@ public class FTR {
 
 		
 		ArrayList<State> validNeighbors = new ArrayList<State>();
+		int validPaths = 0;
 		
-		if (s.x+1 < X_DIMENSION && s.x+1 >= 0 && s.y < X_DIMENSION && s.y >= 0)
-			if (!CLOSED.contains(map[s.x+1][s.y]) && observableMap[s.x+1][s.y] == 0)
+		if (s.x+1 < X_DIMENSION && s.x+1 >= 0 && s.y < X_DIMENSION && s.y >= 0) {
+			if (!CLOSED.contains(map[s.x+1][s.y]) && observableMap[s.x+1][s.y] == 0) {
 					validNeighbors.add(map[s.x+1][s.y]);
-		if (s.x-1 < X_DIMENSION && s.x-1 >= 0 && s.y < X_DIMENSION && s.y >= 0)
-			if (!CLOSED.contains(map[s.x-1][s.y]) && observableMap[s.x-1][s.y] == 0)
+					validPaths++;
+			}
+		}
+		if (s.x-1 < X_DIMENSION && s.x-1 >= 0 && s.y < X_DIMENSION && s.y >= 0) {
+			if (!CLOSED.contains(map[s.x-1][s.y]) && observableMap[s.x-1][s.y] == 0) {
 					validNeighbors.add(map[s.x-1][s.y]);
-		if (s.x < X_DIMENSION && s.x >= 0 && s.y+1 < X_DIMENSION && s.y+1 >= 0)
-			if (!CLOSED.contains(map[s.x][s.y+1]) && observableMap[s.x][s.y+1] == 0)
+					validPaths++;
+			}
+		}
+		if (s.x < X_DIMENSION && s.x >= 0 && s.y+1 < X_DIMENSION && s.y+1 >= 0) {
+			if (!CLOSED.contains(map[s.x][s.y+1]) && observableMap[s.x][s.y+1] == 0) {
 					validNeighbors.add(map[s.x][s.y+1]);
-		if (s.x < X_DIMENSION && s.x >= 0 && s.y-1 < X_DIMENSION && s.y-1 >= 0)
-			if (!CLOSED.contains(map[s.x][s.y-1]) && observableMap[s.x][s.y-1] == 0)
+					validPaths++;
+			}
+		}
+		if (s.x < X_DIMENSION && s.x >= 0 && s.y-1 < X_DIMENSION && s.y-1 >= 0) {
+			if (!CLOSED.contains(map[s.x][s.y-1]) && observableMap[s.x][s.y-1] == 0) {
 					validNeighbors.add(map[s.x][s.y-1]);
+					validPaths++;
+			}
+		}
+		
+		System.out.println("For state " + s.x + "," + s.y);
+		System.out.println("	Found " + validPaths + " neighbors");
 		
 		for (State o: validNeighbors) {
 			//System.out.println("neighbors added: " + o.x + " " + o.y);
@@ -751,6 +743,42 @@ public class FTR {
 		}
 		System.out.println();
 		return start;
+	}
+	
+	private static State followPointers(State start) {
+		State temp = start; int x,y;
+		while (temp.pointer != 0) {
+			System.out.print("Robot following backwards A star: ");
+			System.out.print("	Robot on cell " + temp.x + "," + temp.y + " ");
+			if (temp.pointer == 1) {
+				x = temp.x+1; y = temp.y;
+			}
+			else if (temp.pointer == 2) {
+				x = temp.x-1; y = temp.y;
+			}
+			else if (temp.pointer == 3) {
+				x = temp.x; y = temp.y-1;
+			}
+			else if (temp.pointer == 4) {
+				x = temp.x; y = temp.y+1;
+			}
+			else {
+				System.out.println("Uh oh...pointer set to invalid direction...");
+				Scanner myObj = new Scanner(System.in);
+				myObj.nextLine();
+				myObj.close();
+				return null;
+			}
+			
+			if (knownMap[x][y] == 1) {
+				System.out.println("	Robot tried to walk blocked cell " + x + "," + y + "!");
+				observableMap[x][y] = 1;
+				return temp;
+			}
+			
+			temp = map[x][y];
+		}
+		return temp;
 	}
 	
 	private static void printMap(int [][]map) {

@@ -20,7 +20,7 @@ public class State {
 	}
 	
 	public String toString(){
-		return "[x: " + x + " y: "+ y + "] with f: " + fValue + " with g: " + gValue;
+		return "[x: " + x + " y: "+ y + "] with f: " + fValue + " with g: " + gValue + "with h: " + hValue;
 	}
 	
 	@Override
