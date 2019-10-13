@@ -18,8 +18,9 @@ public class FTR {
 	static int observableMap[][];
 	static int newHValueMap[][];
 	static State map[][];
-	static int X_DIMENSION = 101;
-	static int Y_DIMENSION = 101;
+	static int X_DIMENSION = 20;
+	static int Y_DIMENSION = 20;
+	static int num_invalid_maps = 0;
 	
 	/*
 	 * Initialize a priority queue for the open list 
@@ -53,6 +54,31 @@ public class FTR {
 		List<int[][]> list;
 		int knownMap[][];
 		int numMaps;
+		
+		try {
+			list = SavedMaps.getMaps();
+			knownMap = list.get(3);
+			repeatedForwardAStar(knownMap);
+			printMap(knownMap);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(4);
+//			repeatedAdaptiveAStar(knownMap);
+//			printMap(knownMap);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		System.out.println("Expanded cells forward: "+forwardAStarExpandedCells);
+		System.out.println("Expanded cells: "+adaptiveAStarExpandedCells);
+
+		
+		/*
 		try {
 			list = SavedMaps.getMaps();
 			numMaps = list.size();
@@ -62,7 +88,8 @@ public class FTR {
 				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
 				//printMap(knownMap);
 			}
-			System.out.println("Forward A Star Expanded cells: "+forwardAStarExpandedCells/numMaps);
+			int valid_maps = numMaps - num_invalid_maps;
+			System.out.println("Forward A Star Expanded cells: "+forwardAStarExpandedCells/valid_maps);
 
 			list = SavedMaps.getMaps();
 			numMaps = list.size();
@@ -72,7 +99,7 @@ public class FTR {
 				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
 				//printMap(knownMap);
 			}
-			System.out.println("Backward A Star Expanded cells: "+backwardAStarExpandedCells/numMaps);
+			System.out.println("Backward A Star Expanded cells: "+backwardAStarExpandedCells/valid_maps);
 
 			list = SavedMaps.getMaps();
 			numMaps = list.size();
@@ -82,12 +109,14 @@ public class FTR {
 				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
 				//printMap(knownMap);
 			}
-			System.out.println("Backward A Star Expanded cells: "+adaptiveAStarExpandedCells/numMaps);
+			System.out.println("Backward A Star Expanded cells: "+adaptiveAStarExpandedCells/valid_maps);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
+		
 	}
 	
 	/*
@@ -154,6 +183,7 @@ public class FTR {
 		
 		
 		while (!start.equals(goal)) {
+			printMap(knownMap);
 			
 			/*
 			 * Use scanner to block once travelPath is called
@@ -216,6 +246,7 @@ public class FTR {
 				 */
 				
 				System.out.println("No path found");
+				num_invalid_maps++;
 				return;
 			}
 			
@@ -306,6 +337,7 @@ public class FTR {
 			}
 			else {
 				System.out.println("No path found");
+				num_invalid_maps++;
 				myObj.close();
 				break;
 			}
@@ -384,6 +416,7 @@ public class FTR {
 			}
 			else {
 				System.out.println("No path found");
+				num_invalid_maps++;
 				return;
 			}
 			
@@ -836,11 +869,11 @@ public class FTR {
 	public static void printMap(int [][]map) {
 		System.out.print(" ");
 		for (int i = 0; i < X_DIMENSION; i++) {
-			System.out.print(i);
+			System.out.print(1);
 		}
 		System.out.println();
 		for (int i = 0; i < X_DIMENSION; i++) {
-			System.out.print(i);
+			System.out.print(1);
 			for (int j = 0; j < Y_DIMENSION; j++) {
 				if (map[j][i] == 0)
 					System.out.print(" ");
@@ -905,10 +938,12 @@ public class FTR {
 		int[][] mapp= new int[101][101];
 		for (int i = 0; i < 101; i++) {
 			for (int j = 0; j < 101; j++) {
-				mapp[i][j] = rng.nextInt(100) < 20 ? 1:0;
+				mapp[i][j] = rng.nextInt(100) < 25 ? 1:0;
 				
 			}
 		}
+		mapp[0][0] = 0;
+		mapp[100][100] = 0;
 		return mapp;
 	}
 	
