@@ -37,6 +37,8 @@ public class FTR {
 	static int goal_x = rng.nextInt(X_DIMENSION-1);
 	static int goal_y = rng.nextInt(Y_DIMENSION-1);
 	
+	static boolean setall = false;
+	
 	
 	/*
 	 * Initialize a priority queue for the open list 
@@ -61,47 +63,189 @@ public class FTR {
 		List<int[][]> list;
 		int knownMap[][];
 		int numMaps;
+		int chooseMap = rng.nextInt(49);
+		
+		/*
+		 * Things to do: 
+		 * Use same map
+		 * Use same start and end cells
+		 * Show forward A tie breaker for high g values
+		 * Show forward A tie breaker for low g values
+		 * Show backwards A star
+		 * Show adaptive A star
+		 * Block with scanner input
+		 */
+		
+		try {
+			Scanner in = new Scanner(System.in);
+			String arg;
+			System.out.println("Type help for options");
+			while (true) {
+				arg = in.nextLine();
+				if (arg.contentEquals("quit")) {
+					System.out.println("quit successfully...");
+					return;
+				}
+				else if (arg.contentEquals("help")) {
+					System.out.println("quit - exit program");
+					System.out.println("setall - print new maze with path every time block encountered");
+					System.out.println("setnone - print initial maze and print end maze with path");
+					System.out.println("forwardg - forward a star with ties in favor of high g");
+					System.out.println("forwardf - forward a star with ties in favor of low g");
+					System.out.println("backward - backward a star");
+					System.out.println("adaptive - adaptive a star");
+					System.out.println("restart - randomly choose different start and end");
+					System.out.println("new maze - randomly choose different start and end");
+					System.out.println("hard set - hard set start and goal to be diagonally opposite");
+					System.out.println("resize - resize the map to new n by n with dimension provided by user");
+
+				}
+				else if (arg.contentEquals("setall")) {
+					setall = true;
+				}
+				else if (arg.contentEquals("setnone")) {
+					setall = false;
+				}
+				else if (arg.contentEquals("forwardg")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedForwardAStar(knownMap, true);
+					printMap(knownMap);
+					System.out.println("forward with high g: " + forwardAStarExpandedCells);
+					forwardAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("forwardf")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedForwardAStar(knownMap, false);
+					printMap(knownMap);
+					System.out.println("forward with low g: " + forwardAStarExpandedCells);
+					forwardAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("backward")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedBackwardsAStar(knownMap);
+					printMap(knownMap);
+					System.out.println("backwards: " + backwardAStarExpandedCells);
+					backwardAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("adaptive")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedAdaptiveAStar(knownMap);
+					printMap(knownMap);
+					System.out.println("adaptive: " + adaptiveAStarExpandedCells);
+					adaptiveAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("restart")) {
+					start_x = rng.nextInt(X_DIMENSION-1);
+					start_y = rng.nextInt(Y_DIMENSION-1);
+
+					goal_x = rng.nextInt(X_DIMENSION-1);
+					goal_y = rng.nextInt(Y_DIMENSION-1);
+				}
+				else if (arg.contentEquals("new maze")) {
+					 chooseMap = rng.nextInt(49);
+				}
+				else if (arg.contentEquals("hard set")) {
+					start_x = 0;	goal_x = X_DIMENSION-1;
+					start_y = 0;	goal_y = Y_DIMENSION-1;
+				}
+				else if (arg.contentEquals("resize")) {
+					System.out.print("Enter your new dimension: ");
+					arg = in.nextLine();
+					try {
+						   int foo = Integer.parseInt(arg);
+						   if (foo < 0 || foo > 101)
+							   System.out.println("Invalid dimension...");
+						   else {
+							   X_DIMENSION = foo;
+							   Y_DIMENSION = foo;
+						   }
+					}
+					catch (NumberFormatException e) {
+						   System.out.println("Not an integer!");
+					}
+				}
+				else {
+					System.out.println("Invalid command");
+				}
+				
+			}
+		
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+//		try {
+//			list = SavedMaps.getMaps();
 		
 		//get map
 		//repeated A star 50 times on same map with different start 
 		//repeated A star 50 times on same map with different end 
 		
-		try {
-			list = SavedMaps.getMaps();
-			knownMap = list.get(0);
-			start_x = rng.nextInt(X_DIMENSION-1);
-			start_y = rng.nextInt(Y_DIMENSION-1);
-			for (int i = 0; i < 50; i++) {
-				repeatedForwardAStar(knownMap);
-				list = SavedMaps.getMaps();
-				knownMap = list.get(0);
-				goal_x = rng.nextInt(X_DIMENSION-1);
-				goal_y = rng.nextInt(Y_DIMENSION-1);
-			}
-			System.out.println("forward: " + forwardAStarExpandedCells/50);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		try {
-			list = SavedMaps.getMaps();
-			knownMap = list.get(0);
-			start_x = rng.nextInt(X_DIMENSION-1);
-			start_y = rng.nextInt(Y_DIMENSION-1);
-			for (int i = 0; i < 50; i++) {
-				repeatedBackwardsAStar(knownMap);
-				list = SavedMaps.getMaps();
-				knownMap = list.get(0);
-				goal_x = rng.nextInt(X_DIMENSION-1);
-				goal_y = rng.nextInt(Y_DIMENSION-1);
-			}
-			System.out.println("backward: " + backwardAStarExpandedCells/50);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			
+//			repeatedForwardAStar(knownMap, true);
+//			list = SavedMaps.getMaps();
+//			System.out.println("forward: " + forwardAStarExpandedCells);
+//			forwardAStarExpandedCells = 0;
+//		
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			
+//			repeatedForwardAStar(knownMap, false);
+//			list = SavedMaps.getMaps();
+//			System.out.println("forward: " + forwardAStarExpandedCells);
+//			forwardAStarExpandedCells = 0;
+//		
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+	
+//		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			for (int i = 0; i < 50; i++) {
+//				repeatedBackwardsAStar(knownMap);
+//				list = SavedMaps.getMaps();
+//				knownMap = list.get(0);
+//				goal_x = rng.nextInt(X_DIMENSION-1);
+//				goal_y = rng.nextInt(Y_DIMENSION-1);
+//			}
+//			System.out.println("backward: " + backwardAStarExpandedCells);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			for (int i = 0; i < 50; i++) {
+//				repeatedAdaptiveAStar(knownMap);
+//				list = SavedMaps.getMaps();
+//				knownMap = list.get(0);
+//				goal_x = rng.nextInt(X_DIMENSION-1);
+//				goal_y = rng.nextInt(Y_DIMENSION-1);
+//			}
+//			System.out.println("adaptive: " + adaptiveAStarExpandedCells);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 //		try {
 //			list = SavedMaps.getMaps();
@@ -126,45 +270,66 @@ public class FTR {
 //		System.out.println("Expanded cells forward: "+forwardAStarExpandedCells);
 //		System.out.println("Expanded cells backward: "+adaptiveAStarExpandedCells);
 
-		
-		
-//		try {
-//			list = SavedMaps.getMaps();
-//			numMaps = list.size();
-//			for (int[][] m: list) {
-//				knownMap = m;
-//				repeatedForwardAStar(knownMap);
-//				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
-//				//printMap(knownMap);
-//			}
-//			int valid_maps = numMaps - num_invalid_maps;
-//			
-//			list = SavedMaps.getMaps();
-//			numMaps = list.size();
-//			for (int[][] m: list) {
-//				knownMap = m;
-//				repeatedBackwardsAStar(knownMap);
-//				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
-//				//printMap(knownMap);
-//			}
+		/*
+		int tracker1 = 0;
+		int tracker2 = 0;
+		int tracker3 = 0;
+		try {
+			list = SavedMaps.getMaps();
+			numMaps = list.size();
+			for (int[][] m: list) {
+				knownMap = m;
+				repeatedForwardAStar(knownMap, true);
+				//System.out.print(forwardAStarExpandedCells + ", ");
+				//tracker1 += forwardAStarExpandedCells;
+				//forwardAStarExpandedCells = 0;
+				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
+				//printMap(knownMap);
+			}
+			//System.out.println();
+			int valid_maps = numMaps - num_invalid_maps;
+			
+			System.out.println("large g A Star Expanded cells: "+forwardAStarExpandedCells/valid_maps);
+			forwardAStarExpandedCells = 0;
+			
+			
+			list = SavedMaps.getMaps();
+			numMaps = list.size();
+			for (int[][] m: list) {
+				knownMap = m;
+				repeatedForwardAStar(knownMap, false);
+				//System.out.print(backwardAStarExpandedCells + ", ");
+				//tracker2 += backwardAStarExpandedCells;
+				//backwardAStarExpandedCells = 0;
+				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
+				//printMap(knownMap);
+			}
+			System.out.println("small g A Star Expanded cells: "+forwardAStarExpandedCells/valid_maps);
+//			System.out.println();
+			
 //			list = SavedMaps.getMaps();
 //			numMaps = list.size();
 //			for (int[][] m: list) {
 //				knownMap = m;
 //				repeatedAdaptiveAStar(knownMap);
+//				System.out.print(adaptiveAStarExpandedCells + ", ");
+//				tracker3 += adaptiveAStarExpandedCells;
+//				adaptiveAStarExpandedCells = 0;
 //				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
 //				//printMap(knownMap);
 //			}
-//			System.out.println("Forward A Star Expanded cells: "+forwardAStarExpandedCells/valid_maps);
-//			System.out.println("Backward A Star Expanded cells: "+backwardAStarExpandedCells/valid_maps);
-//			System.out.println("Adaptive A Star Expanded cells: "+adaptiveAStarExpandedCells/valid_maps);
-//			
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
-		
+//			System.out.println();
+			
+			System.out.println("large g A Star Expanded cells: "+tracker1/valid_maps);
+			System.out.println("small g A Star Expanded cells: "+tracker2/valid_maps);
+//			System.out.println("Adaptive A Star Expanded cells: "+tracker3/valid_maps);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
+
 	}
 	
 	/*
@@ -175,12 +340,14 @@ public class FTR {
 		return Math.abs(x1-x2) + Math.abs(y1-y2);
 	}
 	
-	public static void repeatedForwardAStar(int knownMap[][]) {
+	public static void repeatedForwardAStar(int knownMap[][], boolean tiebreak) {
 		
 		/*
 		 * Manually configure the goal state for now
 		 * Declare a stack to hold states belonging to shortest path
 		 */
+		
+		System.out.println("Start: " + start_x + "," + start_y + "	Goal: " + goal_x + "," + goal_y);
 		
 		State goal = new State(goal_x, goal_y, 0);
 		//State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
@@ -211,9 +378,6 @@ public class FTR {
 		State start = map[start_x][start_y];
 		//State start = map[0][0];
 
-		//System.out.println("Forward Start cell: "+ start.x + "," + start.y);
-		//System.out.println("Forward goal cell: "+ goal.x + "," + goal.y);
-
 		//map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
 		map[goal_x][goal_y] = goal;
 
@@ -229,21 +393,28 @@ public class FTR {
 		initialCheck(start, knownMap);
 		
 		if (knownMap[start.x][start.y] == 1) {
-			
-			//System.out.println("Starting cell is block");
+			System.out.println("Starting cell is block");
 			num_invalid_maps++;
 			return;
 		}
 		
 		if (knownMap[goal.x][goal.y] == 1) {
-			//System.out.println("goal cell is block");
+			System.out.println("goal cell is block");
+			num_invalid_maps++;
 			return;
 		}
 		
 		
 		while (!start.equals(goal)) {
 			
-			//printMap(knownMap);
+			Scanner myObj = new Scanner(System.in);
+			
+			if (setall) {
+				printMap(knownMap);
+				System.out.println("Hit enter to see next path");
+				myObj.nextLine();
+			}
+			
 			
 			/*
 			 * Use scanner to block once travelPath is called
@@ -251,7 +422,6 @@ public class FTR {
 			 * This will make analyzing each iteration of A* easier
 			 */
 			
-			Scanner myObj = new Scanner(System.in);
 			//String userName = myObj.nextLine();
 			//printMap(knownMap);
 			
@@ -276,8 +446,14 @@ public class FTR {
 			 * Insert starting cell inside open list
 			 */
 			
-			OPEN = new PriorityQueue<State>(( a, b ) -> 
+			if (tiebreak) {
+				OPEN = new PriorityQueue<State>(( a, b ) -> 
 					(100 * a.fValue - a.gValue) - (100* b.fValue - b.gValue));
+			}
+			else {
+				OPEN = new PriorityQueue<State>(( a, b ) -> 
+					(100 * a.gValue - a.fValue) - (100* b.gValue - b.hValue));
+			}
 			CLOSED = new HashSet<>();
 			OPEN.add(start);
 			
@@ -305,7 +481,7 @@ public class FTR {
 				 * Given that a path is not found, break the loop 
 				 */
 				
-				//System.out.println("No path found");
+				System.out.println("No path found!");
 				return;
 			}
 			
@@ -340,9 +516,9 @@ public class FTR {
 	
 	public static void repeatedBackwardsAStar(int knownMap[][]) {
 		
-		State goal = new State(goal_x, goal_y, 0);
+		System.out.println("Start: " + start_x + "," + start_y + "	Goal: " + goal_x + "," + goal_y);
 		
-		Scanner myObj;
+		State goal = new State(goal_x, goal_y, 0);
 		
 		makeMap(goal);
 		map[goal_x][goal_y] = goal;
@@ -357,11 +533,11 @@ public class FTR {
 		initialCheck(start, knownMap);
 		
 		if (knownMap[start.x][start.y] == 1) {
-			//System.out.println("start cell is block");
+			System.out.println("start cell is block");
 			return;
 		}
 		if (knownMap[goal.x][goal.y] == 1) {
-			//System.out.println("goal cell is block");
+			System.out.println("goal cell is block");
 			return;
 		}
 		
@@ -370,7 +546,13 @@ public class FTR {
 			
 			//printMap(knownMap);
 			
-			myObj = new Scanner(System.in);
+			Scanner myObj = new Scanner(System.in);
+			
+			if (setall) {
+				printMap(knownMap);
+				System.out.println("Hit enter to see next path");
+				myObj.nextLine();
+			}
 			//myObj.nextLine();
 			//printMap(knownMap);
 			
@@ -414,6 +596,8 @@ public class FTR {
 	}
 	
 	public static void repeatedAdaptiveAStar(int knownMap[][]) {
+		
+		System.out.println("Start: " + start_x + "," + start_y + "	Goal: " + goal_x + "," + goal_y);
 		
 		State goal = new State(goal_x, goal_y, 0);
 		Stack<State> path;
@@ -460,8 +644,12 @@ public class FTR {
 			//printMap(knownMap);
 			
 			Scanner myObj = new Scanner(System.in);
-			//String userName = myObj.nextLine();
-			//printMap(knownMap);
+			
+			if (setall) {
+				printMap(knownMap);
+				System.out.println("Hit enter to see next path");
+				myObj.nextLine();
+			}
 			
 			counter+=1;
 			start.gValue = 0;
