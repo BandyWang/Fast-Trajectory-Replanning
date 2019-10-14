@@ -1,31 +1,14 @@
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Stack;
 
 public class FTR {
-	
-	/*
-	 * Set the dimensions of the grid world
-	 */
-	
-	static int knownMap[][];
-	static int observableMap[][];
-	static int newHValueMap[][];
-	static State map[][];
-	static int X_DIMENSION = 5;
-	static int Y_DIMENSION = 5;
-	
-	/*
-	 * Initialize a priority queue for the open list 
-	 * and a HashSet for the closed list
-	 */
-	
-	static PriorityQueue<State> OPEN;
-	static HashSet<State> CLOSED;
 	
 	/*
 	 * Initialize a random instance for creating a maze
@@ -35,6 +18,35 @@ public class FTR {
 	static Random rng = new Random();
 	static int counter;
 	static int ACTION_COST = 1;
+	
+	/*
+	 * Set the dimensions of the grid world
+	 */
+	
+	//static int knownMap[][];
+	static int observableMap[][];
+	static int newHValueMap[][];
+	static State map[][];
+	static int X_DIMENSION = 101;
+	static int Y_DIMENSION = 101;
+	static int num_invalid_maps = 0;
+	
+	static int start_x = rng.nextInt(X_DIMENSION-1);
+	static int start_y = rng.nextInt(Y_DIMENSION-1);
+
+	static int goal_x = rng.nextInt(X_DIMENSION-1);
+	static int goal_y = rng.nextInt(Y_DIMENSION-1);
+	
+	static boolean setall = false;
+	
+	
+	/*
+	 * Initialize a priority queue for the open list 
+	 * and a HashSet for the closed list
+	 */
+	
+	static PriorityQueue<State> OPEN;
+	static HashSet<State> CLOSED;
 	
 	/*
 	 * Count the expanded cells for each version of A*
@@ -48,12 +60,276 @@ public class FTR {
 	 */
 	
 	public static void main(String[] args) {
-		//repeatedForwardAStar();
-		//repeatedAdaptiveAStar();
-		repeatedBackwardsAStar();
-		//printMap(observableMap);
-		printMap(knownMap);
-		System.out.println("Expanded cells: "+backwardAStarExpandedCells);
+		List<int[][]> list;
+		int knownMap[][];
+		int numMaps;
+		int chooseMap = rng.nextInt(49);
+		
+		/*
+		 * Things to do: 
+		 * Use same map
+		 * Use same start and end cells
+		 * Show forward A tie breaker for high g values
+		 * Show forward A tie breaker for low g values
+		 * Show backwards A star
+		 * Show adaptive A star
+		 * Block with scanner input
+		 */
+		
+		try {
+			Scanner in = new Scanner(System.in);
+			String arg;
+			System.out.println("Type help for options");
+			while (true) {
+				arg = in.nextLine();
+				if (arg.contentEquals("quit")) {
+					System.out.println("quit successfully...");
+					return;
+				}
+				else if (arg.contentEquals("help")) {
+					System.out.println("quit - exit program");
+					System.out.println("setall - print new maze with path every time block encountered");
+					System.out.println("setnone - print initial maze and print end maze with path");
+					System.out.println("forwardg - forward a star with ties in favor of high g");
+					System.out.println("forwardf - forward a star with ties in favor of low g");
+					System.out.println("backward - backward a star");
+					System.out.println("adaptive - adaptive a star");
+					System.out.println("restart - randomly choose different start and end");
+					System.out.println("new maze - randomly choose different start and end");
+					System.out.println("hard set - hard set start and goal to be diagonally opposite");
+					System.out.println("resize - resize the map to new n by n with dimension provided by user");
+
+				}
+				else if (arg.contentEquals("setall")) {
+					setall = true;
+				}
+				else if (arg.contentEquals("setnone")) {
+					setall = false;
+				}
+				else if (arg.contentEquals("forwardg")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedForwardAStar(knownMap, true);
+					printMap(knownMap);
+					System.out.println("forward with high g: " + forwardAStarExpandedCells);
+					forwardAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("forwardf")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedForwardAStar(knownMap, false);
+					printMap(knownMap);
+					System.out.println("forward with low g: " + forwardAStarExpandedCells);
+					forwardAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("backward")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedBackwardsAStar(knownMap);
+					printMap(knownMap);
+					System.out.println("backwards: " + backwardAStarExpandedCells);
+					backwardAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("adaptive")) {
+					list = SavedMaps.getMaps();
+					knownMap = list.get(chooseMap);
+					repeatedAdaptiveAStar(knownMap);
+					printMap(knownMap);
+					System.out.println("adaptive: " + adaptiveAStarExpandedCells);
+					adaptiveAStarExpandedCells = 0;
+				}
+				else if (arg.contentEquals("restart")) {
+					start_x = rng.nextInt(X_DIMENSION-1);
+					start_y = rng.nextInt(Y_DIMENSION-1);
+
+					goal_x = rng.nextInt(X_DIMENSION-1);
+					goal_y = rng.nextInt(Y_DIMENSION-1);
+				}
+				else if (arg.contentEquals("new maze")) {
+					 chooseMap = rng.nextInt(49);
+				}
+				else if (arg.contentEquals("hard set")) {
+					start_x = 0;	goal_x = X_DIMENSION-1;
+					start_y = 0;	goal_y = Y_DIMENSION-1;
+				}
+				else if (arg.contentEquals("resize")) {
+					System.out.print("Enter your new dimension: ");
+					arg = in.nextLine();
+					try {
+						   int foo = Integer.parseInt(arg);
+						   if (foo < 0 || foo > 101)
+							   System.out.println("Invalid dimension...");
+						   else {
+							   X_DIMENSION = foo;
+							   Y_DIMENSION = foo;
+						   }
+					}
+					catch (NumberFormatException e) {
+						   System.out.println("Not an integer!");
+					}
+				}
+				else {
+					System.out.println("Invalid command");
+				}
+				
+			}
+		
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+//		try {
+//			list = SavedMaps.getMaps();
+		
+		//get map
+		//repeated A star 50 times on same map with different start 
+		//repeated A star 50 times on same map with different end 
+		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			
+//			repeatedForwardAStar(knownMap, true);
+//			list = SavedMaps.getMaps();
+//			System.out.println("forward: " + forwardAStarExpandedCells);
+//			forwardAStarExpandedCells = 0;
+//		
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			
+//			repeatedForwardAStar(knownMap, false);
+//			list = SavedMaps.getMaps();
+//			System.out.println("forward: " + forwardAStarExpandedCells);
+//			forwardAStarExpandedCells = 0;
+//		
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+	
+//		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			for (int i = 0; i < 50; i++) {
+//				repeatedBackwardsAStar(knownMap);
+//				list = SavedMaps.getMaps();
+//				knownMap = list.get(0);
+//				goal_x = rng.nextInt(X_DIMENSION-1);
+//				goal_y = rng.nextInt(Y_DIMENSION-1);
+//			}
+//			System.out.println("backward: " + backwardAStarExpandedCells);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(0);
+//			for (int i = 0; i < 50; i++) {
+//				repeatedAdaptiveAStar(knownMap);
+//				list = SavedMaps.getMaps();
+//				knownMap = list.get(0);
+//				goal_x = rng.nextInt(X_DIMENSION-1);
+//				goal_y = rng.nextInt(Y_DIMENSION-1);
+//			}
+//			System.out.println("adaptive: " + adaptiveAStarExpandedCells);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(3);
+//			repeatedForwardAStar(knownMap);
+//			printMap(knownMap);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			list = SavedMaps.getMaps();
+//			knownMap = list.get(3);
+//			repeatedAdaptiveAStar(knownMap);
+//			printMap(knownMap);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		System.out.println("Expanded cells forward: "+forwardAStarExpandedCells);
+//		System.out.println("Expanded cells backward: "+adaptiveAStarExpandedCells);
+
+		/*
+		int tracker1 = 0;
+		int tracker2 = 0;
+		int tracker3 = 0;
+		try {
+			list = SavedMaps.getMaps();
+			numMaps = list.size();
+			for (int[][] m: list) {
+				knownMap = m;
+				repeatedForwardAStar(knownMap, true);
+				//System.out.print(forwardAStarExpandedCells + ", ");
+				//tracker1 += forwardAStarExpandedCells;
+				//forwardAStarExpandedCells = 0;
+				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
+				//printMap(knownMap);
+			}
+			//System.out.println();
+			int valid_maps = numMaps - num_invalid_maps;
+			
+			System.out.println("large g A Star Expanded cells: "+forwardAStarExpandedCells/valid_maps);
+			forwardAStarExpandedCells = 0;
+			
+			
+			list = SavedMaps.getMaps();
+			numMaps = list.size();
+			for (int[][] m: list) {
+				knownMap = m;
+				repeatedForwardAStar(knownMap, false);
+				//System.out.print(backwardAStarExpandedCells + ", ");
+				//tracker2 += backwardAStarExpandedCells;
+				//backwardAStarExpandedCells = 0;
+				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
+				//printMap(knownMap);
+			}
+			System.out.println("small g A Star Expanded cells: "+forwardAStarExpandedCells/valid_maps);
+//			System.out.println();
+			
+//			list = SavedMaps.getMaps();
+//			numMaps = list.size();
+//			for (int[][] m: list) {
+//				knownMap = m;
+//				repeatedAdaptiveAStar(knownMap);
+//				System.out.print(adaptiveAStarExpandedCells + ", ");
+//				tracker3 += adaptiveAStarExpandedCells;
+//				adaptiveAStarExpandedCells = 0;
+//				//System.out.println("Expanded cells: "+forwardAStarExpandedCells);
+//				//printMap(knownMap);
+//			}
+//			System.out.println();
+			
+			System.out.println("large g A Star Expanded cells: "+tracker1/valid_maps);
+			System.out.println("small g A Star Expanded cells: "+tracker2/valid_maps);
+//			System.out.println("Adaptive A Star Expanded cells: "+tracker3/valid_maps);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
+
 	}
 	
 	/*
@@ -64,14 +340,18 @@ public class FTR {
 		return Math.abs(x1-x2) + Math.abs(y1-y2);
 	}
 	
-	public static void repeatedForwardAStar() {
+	public static void repeatedForwardAStar(int knownMap[][], boolean tiebreak) {
 		
 		/*
 		 * Manually configure the goal state for now
 		 * Declare a stack to hold states belonging to shortest path
 		 */
 		
-		State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
+		System.out.println("Start: " + start_x + "," + start_y + "	Goal: " + goal_x + "," + goal_y);
+		
+		State goal = new State(goal_x, goal_y, 0);
+		//State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
+
 		Stack<State> path;
 		
 		/*
@@ -86,18 +366,21 @@ public class FTR {
 //		knownMap[2][1] = 1;
 //		knownMap[2][4] = 1;
 //		knownMap[2][0] = 1;
-		knownMap[2][3] = 1;
-		knownMap[3][4] = 1;
-		knownMap[2][2] = 1;
+//		knownMap[2][3] = 1;
+//		knownMap[3][4] = 1;
+//		knownMap[2][2] = 1;
 		
 		/*
 		 * Manually configure the start state for now
 		 * Have our map remember the instance of goal declared above
 		 * Set the current iteration of A* to 0
 		 */
-		
-		State start = map[2][4];
-		map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
+		State start = map[start_x][start_y];
+		//State start = map[0][0];
+
+		//map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
+		map[goal_x][goal_y] = goal;
+
 		counter = 0;
 		
 		/*
@@ -107,15 +390,31 @@ public class FTR {
 		 * Break the loop if the agent finds the goal
 		 */
 		
-		initialCheck(start);
+		initialCheck(start, knownMap);
 		
 		if (knownMap[start.x][start.y] == 1) {
 			System.out.println("Starting cell is block");
+			num_invalid_maps++;
+			return;
+		}
+		
+		if (knownMap[goal.x][goal.y] == 1) {
+			System.out.println("goal cell is block");
+			num_invalid_maps++;
 			return;
 		}
 		
 		
 		while (!start.equals(goal)) {
+			
+			Scanner myObj = new Scanner(System.in);
+			
+			if (setall) {
+				printMap(knownMap);
+				System.out.println("Hit enter to see next path");
+				myObj.nextLine();
+			}
+			
 			
 			/*
 			 * Use scanner to block once travelPath is called
@@ -123,9 +422,8 @@ public class FTR {
 			 * This will make analyzing each iteration of A* easier
 			 */
 			
-			Scanner myObj = new Scanner(System.in);
-			String userName = myObj.nextLine();
-			printMap(knownMap);
+			//String userName = myObj.nextLine();
+			//printMap(knownMap);
 			
 			//COUNTER AND SEARCH IS NEVER USED IN THIS CODE
 			//**********************************************************
@@ -148,8 +446,14 @@ public class FTR {
 			 * Insert starting cell inside open list
 			 */
 			
-			OPEN = new PriorityQueue<State>(( a, b ) -> 
+			if (tiebreak) {
+				OPEN = new PriorityQueue<State>(( a, b ) -> 
 					(100 * a.fValue - a.gValue) - (100* b.fValue - b.gValue));
+			}
+			else {
+				OPEN = new PriorityQueue<State>(( a, b ) -> 
+					(100 * a.gValue - a.fValue) - (100* b.gValue - b.hValue));
+			}
 			CLOSED = new HashSet<>();
 			OPEN.add(start);
 			
@@ -177,7 +481,7 @@ public class FTR {
 				 * Given that a path is not found, break the loop 
 				 */
 				
-				System.out.println("No path found");
+				System.out.println("No path found!");
 				return;
 			}
 			
@@ -189,7 +493,7 @@ public class FTR {
 			 * If the agent found a blocked cell in its path, return the state just before encountering 
 			 */
 			
-			start = travelPath(start, path);
+			start = travelPath(start, path, knownMap);
 			
 			/*
 			 * Mark the spot to remember the robot walked this cell
@@ -206,39 +510,51 @@ public class FTR {
 			
 		}
 		
-		printMap(knownMap);		
+		//printMap(knownMap);		
 		
 	}
 	
-	public static void repeatedBackwardsAStar() {
+	public static void repeatedBackwardsAStar(int knownMap[][]) {
 		
-		State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
+		System.out.println("Start: " + start_x + "," + start_y + "	Goal: " + goal_x + "," + goal_y);
 		
-		Scanner myObj;
+		State goal = new State(goal_x, goal_y, 0);
 		
 		makeMap(goal);
+		map[goal_x][goal_y] = goal;
 		
-		knownMap[2][3] = 1;
-		knownMap[3][4] = 1;
-		knownMap[2][2] = 1;
+//		knownMap[2][3] = 1;
+//		knownMap[3][4] = 1;
+//		knownMap[2][2] = 1;
 		
-		State start = map[2][4];
-		map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
+		State start = map[start_x][start_y];
 		
 
-		initialCheck(start);
+		initialCheck(start, knownMap);
 		
 		if (knownMap[start.x][start.y] == 1) {
-			System.out.println("Starting cell is block");
+			System.out.println("start cell is block");
+			return;
+		}
+		if (knownMap[goal.x][goal.y] == 1) {
+			System.out.println("goal cell is block");
 			return;
 		}
 		
 		
 		while (!start.equals(goal)) {
 			
-			myObj = new Scanner(System.in);
-			myObj.nextLine();
-			printMap(knownMap);
+			//printMap(knownMap);
+			
+			Scanner myObj = new Scanner(System.in);
+			
+			if (setall) {
+				printMap(knownMap);
+				System.out.println("Hit enter to see next path");
+				myObj.nextLine();
+			}
+			//myObj.nextLine();
+			//printMap(knownMap);
 			
 			start.gValue = Integer.MAX_VALUE;
 			goal.gValue = 0;
@@ -257,15 +573,16 @@ public class FTR {
 				 * Don't need a stack to store the path
 				 * Follow pointers from start state
 				 */
-				System.out.println("what is start's pointer? " + start.pointer);
-				start = followPointers(start);
+				//System.out.println("what is start's pointer? " + start.pointer);
+				start = followPointers(start, knownMap);
 				
 				
 			}
 			else {
 				System.out.println("No path found");
+				num_invalid_maps++;
 				myObj.close();
-				return;
+				break;
 			}
 			
 			
@@ -278,9 +595,11 @@ public class FTR {
 		
 	}
 	
-	public static void repeatedAdaptiveAStar() {
+	public static void repeatedAdaptiveAStar(int knownMap[][]) {
 		
-		State goal = new State(X_DIMENSION-1, Y_DIMENSION-1, 0);
+		System.out.println("Start: " + start_x + "," + start_y + "	Goal: " + goal_x + "," + goal_y);
+		
+		State goal = new State(goal_x, goal_y, 0);
 		Stack<State> path;
 		newHValueMap = new int[X_DIMENSION][Y_DIMENSION];
 		
@@ -292,27 +611,45 @@ public class FTR {
 //		knownMap[2][1] = 1;
 //		knownMap[2][4] = 1;
 //		knownMap[2][0] = 1;
-		knownMap[2][3] = 1;
-		knownMap[3][4] = 1;
-		knownMap[2][2] = 1;
+//		knownMap[2][3] = 1;
+//		knownMap[3][4] = 1;
+//		knownMap[2][2] = 1;
+//		knownMap[2][1] = 1;
 		
-		State start = map[2][4];
+		State start = map[start_x][start_y];
+		
+		//System.out.println("Adaptive Start cell: "+ start.x + "," + start.y);
+		//System.out.println("Adaptive goal cell: "+ goal.x + "," + goal.y);
+		
 		start.hValue = manhattenValue(goal.x, goal.y, start.x, start.y);
-		map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
+		
+		map[goal.x][goal.y] = goal;
+		//map[X_DIMENSION-1][Y_DIMENSION-1] = goal;
 		counter = 0;
 		
-		initialCheck(start);
+		initialCheck(start, knownMap);
 		
 		if (knownMap[start.x][start.y] == 1) {
 			System.out.println("Starting cell is block");
 			return;
 		}
+		if (knownMap[goal.x][goal.y] == 1) {
+			System.out.println("goal cell is block");
+			return;
+		}
+		
 		
 		while (!start.equals(goal)) {
 			
+			//printMap(knownMap);
+			
 			Scanner myObj = new Scanner(System.in);
-			String userName = myObj.nextLine();
-			printMap(knownMap);
+			
+			if (setall) {
+				printMap(knownMap);
+				System.out.println("Hit enter to see next path");
+				myObj.nextLine();
+			}
 			
 			counter+=1;
 			start.gValue = 0;
@@ -336,10 +673,11 @@ public class FTR {
 			}
 			else {
 				System.out.println("No path found");
+				num_invalid_maps++;
 				return;
 			}
 			
-			start = travelPath(start, path);
+			start = travelPath(start, path, knownMap);
 			
 			knownMap[start.x][start.y] = -1;
 			
@@ -348,7 +686,7 @@ public class FTR {
 			
 		}
 		
-		printMap(knownMap);
+		//printMap(knownMap);
 	}
 	
 	public static boolean computePath(State start, State goal) {
@@ -376,18 +714,19 @@ public class FTR {
 			State s = OPEN.poll();
 			
 			if (s.equals(goal)) {
+				
 				return true;
 			}
 			
 			forwardAStarExpandedCells++;
-			System.out.println("Computing path, expanded cell " + s.x + "," +s.y);
+			//System.out.println("Computing path, expanded cell " + s.x + "," +s.y);
 			CLOSED.add(s);
 			
-			System.out.println("Look inside open list: ");
-			Iterator<State> val = OPEN.iterator();
-			while (val.hasNext()) {
-				System.out.println("	" + val.next());
-	        } 
+//			System.out.println("Look inside open list: ");
+//			Iterator<State> val = OPEN.iterator();
+//			while (val.hasNext()) {
+//				System.out.println("	" + val.next());
+//	        } 
 		
 			//System.out.println("expanded cell position: " + s.x + " " + s.y);
 			
@@ -479,7 +818,7 @@ public class FTR {
 	}
 	
 	public static boolean computePathBackwards(State start, State goal) {
-		
+
 		while (OPEN.peek() != null) {
 			
 			State s = OPEN.poll();
@@ -490,14 +829,14 @@ public class FTR {
 			
 			backwardAStarExpandedCells++;
 			
-			System.out.println("Computing path, expanded cell " + s.x + "," +s.y);
+			//System.out.println("Computing path, expanded cell " + s.x + "," +s.y);
 			CLOSED.add(s);
 			
-			System.out.println("Look inside open list: ");
-			Iterator<State> val = OPEN.iterator();
-			while (val.hasNext()) {
-				System.out.println("	" + val.next());
-	        } 
+			//System.out.println("Look inside open list: ");
+//			Iterator<State> val = OPEN.iterator();
+//			while (val.hasNext()) {
+//				System.out.println("	" + val.next());
+//	        } 
 			
 			for (State n: actions(s)) {
 				
@@ -566,21 +905,21 @@ public class FTR {
 				State c;
 				
 				Iterator<State> value = OPEN.iterator();
-				while (value.hasNext()) {
-					System.out.println(value.next());
-		        } 
+//				while (value.hasNext()) {
+//					System.out.println(value.next());
+//		        } 
 				value = OPEN.iterator();
 				while (value.hasNext()) {
 					c = value.next();
 		            if (c.equals(n)) {
-		            	System.out.println("State n was found in open list");
-		            	System.out.println("n: " + n.x + "," + n.y);
+		            	//System.out.println("State n was found in open list");
+		            	//System.out.println("n: " + n.x + "," + n.y);
 		            	found = true;
 		            	if (found == true ) {
-		            		System.out.println("Check counter: " + counter + " n.iteration: " + n.iteration);
+		            		//System.out.println("Check counter: " + counter + " n.iteration: " + n.iteration);
 							if (n.iteration == counter - 1) {
 								if (n.fValue >= newHValueMap[n.x][n.y] + s.gValue + ACTION_COST) {
-									System.out.println("Removing c " + c.x + "," + c.y);
+									//System.out.println("Removing c " + c.x + "," + c.y);
 									OPEN.remove(c);
 								}
 								else {
@@ -588,7 +927,7 @@ public class FTR {
 								}
 							}
 							else if (n.fValue >= s.gValue + ACTION_COST + n.hValue) {
-								System.out.println("Removing c " + c.x + "," + c.y);
+								//System.out.println("Removing c " + c.x + "," + c.y);
 								OPEN.remove(c);
 							}
 							else
@@ -599,7 +938,7 @@ public class FTR {
 		        } 
 				
 				if (skip == true) {
-					System.out.println("Skip n " + n.x + "," + n.y);
+					//System.out.println("Skip n " + n.x + "," + n.y);
 					continue;
 				}
 				
@@ -612,12 +951,12 @@ public class FTR {
 				else if (n.iteration == counter - 1) {
 					n.gValue = s.gValue + ACTION_COST;
 					n.fValue = n.gValue + newHValueMap[n.x][n.y];
-					System.out.println("new heuristic: "+ n.gValue + " + " + newHValueMap[n.x][n.y]);
+					//System.out.println("new heuristic: "+ n.gValue + " + " + newHValueMap[n.x][n.y]);
 				}
 				
 				else {
 					n.gValue = s.gValue + ACTION_COST;
-					System.out.println("manhatten: "+ n.gValue + " + " + n.hValue);
+					//System.out.println("manhatten: "+ n.gValue + " + " + n.hValue);
 					n.fValue = n.gValue + n.hValue;
 				}
 					
@@ -635,7 +974,7 @@ public class FTR {
 					n.pointer = 4;
 				}
 				
-				System.out.println("Adding n " + n.x + "," + n.y);
+				//System.out.println("Adding n " + n.x + "," + n.y);
 				OPEN.add(n);
 				
 			}
@@ -678,12 +1017,8 @@ public class FTR {
 			}
 		}
 		
-		System.out.println("For state " + s.x + "," + s.y);
-		System.out.println("	Found " + validPaths + " neighbors");
-		
-		for (State o: validNeighbors) {
-			//System.out.println("neighbors added: " + o.x + " " + o.y);
-		}
+		//System.out.println("For state " + s.x + "," + s.y);
+		//System.out.println("	Found " + validPaths + " neighbors");
 		
 		return validNeighbors;
 	}
@@ -727,7 +1062,7 @@ public class FTR {
 		return path;
 	}
 	
-	private static State travelPath(State start, Stack<State> path) {
+	private static State travelPath(State start, Stack<State> path, int knownMap[][]) {
 		
 		//System.out.println("travelpath");
 
@@ -736,25 +1071,25 @@ public class FTR {
 			return start;
 		while (!path.isEmpty()) {
 			State n = path.pop();
-			System.out.print(n.x + "," + n.y + " ");
+			//System.out.print(n.x + "," + n.y + " ");
 			if (knownMap[n.x][n.y] == 1) {
-				System.out.println("travelpath found blocked cell");
+				//System.out.println("travelpath found blocked cell");
 				observableMap[n.x][n.y] = 1;
 				return start;
 			}
-			initialCheck(map[n.x][n.y]);
+			initialCheck(map[n.x][n.y], knownMap);
 			knownMap[n.x][n.y] = -1;
 			start = n;
 		}
-		System.out.println();
+		//System.out.println();
 		return start;
 	}
 	
-	private static State followPointers(State start) {
-		System.out.println("Robot following backwards A star: ");
+	private static State followPointers(State start, int knownMap[][]) {
+
 		State temp = start; int x,y;
 		while (temp.pointer != 0) {
-			System.out.println("	Robot on cell " + temp.x + "," + temp.y + " ");
+			//System.out.println("	Robot on cell " + temp.x + "," + temp.y + " ");
 			if (temp.pointer == 1) {
 				x = temp.x-1; y = temp.y;
 			}
@@ -770,16 +1105,16 @@ public class FTR {
 			else {
 				System.out.println("Uh oh...pointer set to invalid direction...");
 				Scanner myObj = new Scanner(System.in);
-				myObj.nextLine();
+				//myObj.nextLine();
 				myObj.close();
 				return null;
 			}
 			
-			initialCheck(map[temp.x][temp.y]);
+			initialCheck(map[temp.x][temp.y], knownMap);
 			knownMap[temp.x][temp.y] = -1;
 			
 			if (knownMap[x][y] == 1) {
-				System.out.println("	Robot tried to walk blocked cell " + x + "," + y + "!");
+				//System.out.println("	Robot tried to walk blocked cell " + x + "," + y + "!");
 				observableMap[x][y] = 1;
 				return temp;
 			}
@@ -792,18 +1127,24 @@ public class FTR {
 	public static void printMap(int [][]map) {
 		System.out.print(" ");
 		for (int i = 0; i < X_DIMENSION; i++) {
-			System.out.print(i);
+			System.out.print("1");
 		}
 		System.out.println();
 		for (int i = 0; i < X_DIMENSION; i++) {
-			System.out.print(i);
+			System.out.print("1");
 			for (int j = 0; j < Y_DIMENSION; j++) {
-				if (map[j][i] == 0)
+				if (j == start_x && i == start_y) {
+					System.out.print("S");
+				}
+				else if (j == goal_x && i == goal_y) {
+					System.out.print("G");
+				}
+				else if (map[j][i] == 0)
 					System.out.print(" ");
 				else if (map[j][i] == 1)
 					System.out.print("X");
 				else 
-					System.out.print("S");
+					System.out.print(".");
 			}
 			System.out.println();
 		}
@@ -815,7 +1156,7 @@ public class FTR {
 	 * From the starting cell, remember neighboring blocked cells before starting A*
 	 */
 	
-	private static void initialCheck(State start) {
+	private static void initialCheck(State start, int knownMap[][]) {
 		int x = start.x; int y = start.y;
 		
 		if (x+1 < X_DIMENSION && y < Y_DIMENSION && knownMap[x+1][y] == 1) {
@@ -843,7 +1184,7 @@ public class FTR {
 	 */
 	
 	private static void makeMap(State goal) {
-		knownMap = new int[X_DIMENSION][Y_DIMENSION];
+		//knownMap = new int[X_DIMENSION][Y_DIMENSION];
 		observableMap = new int[X_DIMENSION][Y_DIMENSION];
 		map = new State[X_DIMENSION][Y_DIMENSION];
 		
@@ -861,10 +1202,12 @@ public class FTR {
 		int[][] mapp= new int[101][101];
 		for (int i = 0; i < 101; i++) {
 			for (int j = 0; j < 101; j++) {
-				mapp[i][j] = rng.nextInt(100) < 15 ? 1:0;
+				mapp[i][j] = rng.nextInt(100) < 25 ? 1:0;
 				
 			}
 		}
+		mapp[0][0] = 0;
+		mapp[100][100] = 0;
 		return mapp;
 	}
 	
