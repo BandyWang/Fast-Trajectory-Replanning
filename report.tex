@@ -227,6 +227,28 @@ Forward A* & 728 & 1277 & 1047 & 1018 & 1171 \\
 
 We observe that adaptive A star is only slightly faster than forward A star. Based on the 5 mazes listed, we can see that adaptive A star usually either computes the same amount of expanded cells or only slightly less. These results are within expectations since adaptive A star’s heuristic makes use of the previous iteration A star search history which means adaptive A star should be faster. Adaptive A star’s new heuristic takes advantage of the previous A star search iteration by taking a cell’s old g value and subtracting it from the goal state’s old g value. By using this new heuristic adaptive A star is implicitly remembering where blocked cells are because it correctly assumes that the previous iteration of A star search must have calculated the shortest path available with known blocked cells taken into account. Not only is this heuristic more accurate, it is also never smaller than the old heuristic, manhattan values, because taking into account where blocked cells are will only increase f values. Thus, adaptive A star effectively makes use of information from the last A star search to guide its decision in choosing which cell to expand next.
 
+\medskip\noindent\textbf{\underline{Part 6}} \\
+In our implementation of the 101 by 101 gridworlds, we have a 2d integer array(denoted as array $a$) that represents the world, with elements as 1 as blocked cells and 0 as open cells. We also have a seperate integer 2d array (denoted as array $b$) to store the blcoked cells that the agent has knowledge of. To store the g and f values, we have a seperate 2d array (denoted as array $c$).
+
+One way we can reduce the memory consumption is to use  boolean 2d arrays instead of an integers to represent the first two 2d arrays.
+
+$\textbf{Calculate the amount of memory that they need to operate on
+gridworlds of size 1001*1001}$
+
+Using this new way, we can calulate the memory usage for a 1001 * 1001 with the folowing:
+\\Array $a$: 1001*1001*1 = 1,002,001 bytes
+\\Array $b$: 101*101*1 = 1,002,001 bytes
+\\Array $c$: 101*101*8 = 8,016,008 bytes
+\\Total = 10,020,010 bytes = 10.02001 Mb 
+
+$\textbf{Calculate the largest gridworld that they can operate on within a
+memory limit of 4 MBytes}$ 
+
+Under the new memory implementation, each cell would need 10 bytes. Thus, using only 4Mb, the number of cells that the gridworld can hold would be
+$$ \frac{4*1024}{10} = 409.6$$
+This would be roughly equal to a 20*20 gridworld.
+
+
 
 
 \end{document}
